@@ -10,7 +10,8 @@ import os
 st.set_page_config(page_title="ETrack - Education Tracker", page_icon="📚", layout="wide")
 
 # ── API Key ───────────────────────────────────────────────────
-GEMINI_API_KEY = "AIzaSyDL9GoO2bEwA1UQmDjzPe30Qri4ri6S4oE"
+import os
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY","AIzaSyDL9GoO2bEwA1UQmDjzPe30Qri4ri6S4oE")
 from google import genai
 client = genai.Client(api_key=GEMINI_API_KEY)
 
