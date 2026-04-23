@@ -11,7 +11,7 @@ st.set_page_config(page_title="ETrack - Education Tracker", page_icon="📚", la
 
 # ── API Key ───────────────────────────────────────────────────
 import os
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY","AIzaSyDL9GoO2bEwA1UQmDjzPe30Qri4ri6S4oE")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY","AIzaSyCkYKj4L0jhDzWbjeku-hWpX1crbJQn_Kk")
 from google import genai
 client = genai.Client(api_key=GEMINI_API_KEY)
 
@@ -163,26 +163,59 @@ elif page == "🎯 Goals":
     st.title("🎯 Study Goals")
     st.markdown("Set your weekly study targets!")
 
+    GOALS_FILE = "goals_data.json"
+
+    def load_goals():
+        if os.path.exists(GOALS_FILE):
+            with open(GOALS_FILE, "r") as f:
+                return json.load(f)
+        return {}
+
+    def save_goals(goals):
+        with open(GOALS_FILE, "w") as f:
+            json.dump(goals, f)
+
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("### Set Weekly Goal")
         goal_subject = st.selectbox("Subject", ["Mathematics", "Science", "English", "History", "Computer Science", "Physics", "Chemistry", "Biology"])
         goal_hours = st.number_input("Target Hours per Week", min_value=1, max_value=40, value=5)
         if st.button("💾 Save Goal", use_container_width=True):
+            goals = load_goals()
+            goals[goal_subject] = goal_hours
+            save_goals(goals)
             st.success(f"Goal set! Study {goal_hours} hours of {goal_subject} this week! 💪")
 
     with col2:
-        st.markdown("### Your Progress This Week")
-        data = load_data()
-        if data:
-            df = pd.DataFrame(data)
-            df["date"] = pd.to_datetime(df["date"])
-            this_week = df[df["date"] >= pd.Timestamp.now() - pd.Timedelta(days=7)]
-            if not this_week.empty:
-                weekly = this_week.groupby("subject")["duration"].sum() / 60
-                fig = px.bar(weekly.reset_index(), x="subject", y="duration", title="Hours studied this week", color="subject")
+        st.markdown("### Your Saved Goals")
+        goals = load_goals()
+        if goals:
+            for subject, hours in goals.items():
+                st.info(f"📚 {subject}: {hours} hours/week")
+        else:
+            st.info("No goals set yet!")
+
+    st.markdown("---")
+    st.markdown("### 📊 This Week's Progress vs Goals")
+    data = load_data()
+    if data:
+        df = pd.DataFrame(data)
+        df["date"] = pd.to_datetime(df["date"])
+        this_week = df[df["date"] >= pd.Timestamp.now() - pd.Timedelta(days=7)]
+        if not this_week.empty:
+            weekly = (this_week.groupby("subject")["duration"].sum() / 60).to_dict()
+            goals = load_goals()
+            if goals:
+                comparison = []
+                for subject, target in goals.items():
+                    actual = weekly.get(subject, 0)
+                    comparison.append({"Subject": subject, "Target Hours": target, "Actual Hours": round(actual, 1)})
+                comp_df = pd.DataFrame(comparison)
+                fig = px.bar(comp_df, x="Subject", y=["Target Hours", "Actual Hours"], barmode="group", title="Target vs Actual Study Hours")
                 st.plotly_chart(fig, use_container_width=True)
             else:
-                st.info("No sessions this week yet!")
+                st.info("Set some goals to see comparison!")
         else:
-            st.info("No data yet! Start logging your sessions.")
+            st.info("No sessions this week yet!")
+    else:
+        st.info("No data yet! Start logging your sessions.")
