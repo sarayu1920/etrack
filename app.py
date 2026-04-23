@@ -1,19 +1,22 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()
 import streamlit as st
 from google import genai
 import pandas as pd
 import plotly.express as px
 from datetime import datetime, date
 import json
-import os
+
 
 # ── Page config ──────────────────────────────────────────────
 st.set_page_config(page_title="ETrack - Education Tracker", page_icon="📚", layout="wide")
 
 # ── API Key ───────────────────────────────────────────────────
-import os
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY","AIzaSyCkYKj4L0jhDzWbjeku-hWpX1crbJQn_Kk")
-from google import genai
-client = genai.Client(api_key=GEMINI_API_KEY)
+
+api_key= os.environ.get("GOOGLE_API_KEY")
+
+client = genai.Client(api_key=api_key)
 
 # ── Data Storage ──────────────────────────────────────────────
 DATA_FILE = "study_data.json"
